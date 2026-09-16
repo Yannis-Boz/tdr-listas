@@ -1,4 +1,5 @@
 library(targets)
+library(tarchetypes)
 
 #Carrega os pacotes que as funções precisam
 tar_option_set(packages = c("dplyr", "ggplot2", "readr"))
@@ -39,3 +40,9 @@ tar_target(
 	csv_medias,
 	exporta_medias_csv(medias, "saidas/medias.csv"),
 	format = "file"))
+
+#Relatório
+
+	tar_target(
+	relatorio,
+	"relatorio.qmd")
