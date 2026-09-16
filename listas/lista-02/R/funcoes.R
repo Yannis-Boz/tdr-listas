@@ -33,17 +33,24 @@ ajusta_modelo <- function(dados) {
 	return(modelo)
 }
 
-## Desenha o g
+## Desenha o gráfico
 
 desenha_grafico <- function(dados, caminho_saida) {
 	grafico <- ggplot(dados, aes(x = Wind, y = Ozone)) +
 			geom_point(pch = 19, color = "gray30", alpha = 0.7) +
-			geom_smooth(method = "lm", color = "blue", se = FALSE) +
+			geom_smooth(method = "lm", color = "red", se = FALSE) +
 			theme_minimal() +
 			labs(x = "Velocidade do Vento (mph)", y = "Ozônio (ppb)")
 
 	ggsave(caminho_saida, plot = grafico, width = 7, height = 5, bg = "white")
 
 #Exigência do targets: a função que salva o arquivo deve retornar o caminho
+	return(caminho_saida)
+}
+
+
+#Exporta as médias para CSV
+exporta_medias_csv <- function(resumo, caminho_saida) {
+	write.csv(resumo, file = caminho_saida, row.names = FALSE)
 	return(caminho_saida)
 }
