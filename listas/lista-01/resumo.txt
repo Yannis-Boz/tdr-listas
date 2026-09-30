@@ -1,0 +1,9 @@
+Nome da coluna: Temp
+Número de observações: 153
+Valores NA: 0
+Média por mês:
+  Mai: Média = 65.55 (31 dias medidos)
+  Jun: Média = 79.10 (30 dias medidos)
+  Jul: Média = 83.90 (31 dias medidos)
+  Ago: Média = 83.97 (31 dias medidos)
+  Set: Média = 76.90 (30 dias medidos)
