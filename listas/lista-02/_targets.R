@@ -11,7 +11,7 @@ list(
 #Arquvio de dados de entrada	
 tar_target(
 	arquivo_dados,
-	"/home/yanni/tdr-material-lista-02/tdr-material/dados/airquality.csv",
+	here::here("listas/lista-02/dados/airquality.csv"),
 	format = "file"),
 
 #Dados lidos
