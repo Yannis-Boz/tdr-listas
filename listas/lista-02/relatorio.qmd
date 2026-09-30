@@ -1,0 +1,45 @@
+---
+title: "Análise de Qualidade do Ar"
+author: "Yannis Boz Papazoglou"
+lang: pt-BR
+format: 
+  html:
+    embed-resources: true
+execute:
+  echo: false
+  warning: false
+---
+
+```{r setup, include=FALSE}
+library(targets)
+library(knitr)
+
+# Carrega os alvos do cache do pipeline 
+tar_load(dados_lidos)
+tar_load(medias)
+tar_load(modelo)
+```
+
+## Análise de Dados
+
+Este relatório analisa medições diárias de qualidade do ar. O conjunto de dados bruto original possui `r nrow(dados_lidos)` observações. Devido à presença de valores faltantes (NAs), foram utilizadas efetivamente `r nobs(modelo)` observações válidas para o ajuste do modelo de regressão.
+
+As médias mensais estão sumarizadas na @tbl-medias abaixo.
+
+```{r}
+#| label: tbl-medias
+#| tbl-cap: "Médias mensais de concentração de ozônio e velocidade do vento."
+kable(medias)
+```
+
+A relação entre a velocidade do vento e o ozônio pode ser visualizada na @fig-dispersao. Extraindo os dados do modelo linear, observa-se que, para cada 1 mph de aumento na velocidade do vento, a concentração de ozônio sofre uma alteração média de `r round(coef(modelo)["Wind"], 2)` ppb (o modelo possui um R² de `r round(summary(modelo)$r.squared, 2)`).
+
+```{r}
+#| label: fig-dispersao
+#| fig-cap: "Dispersão e linha de tendência entre a velocidade do vento e ozônio."
+include_graphics(tar_read(figura))
+```
+
+## Conclusão
+
+A análise encontrou uma relação inversa e significativa entre as variáveis. Dias que apresentam maior velocidade do vento tendem a concentrar menores níveis de ozônio.

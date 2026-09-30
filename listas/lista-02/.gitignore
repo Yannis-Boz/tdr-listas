@@ -1,0 +1,6 @@
+_targets/
+saidas/
+*.html
+.RData
+.Rhistory
+.RUSER
