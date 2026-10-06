@@ -1,0 +1,154 @@
+--- 
+title: "Lista 03 - Receitas atendidas nas farmácias" 
+author: "Yannis Boz" 
+date: today 
+format: 
+  html: 
+    self-contained: true 
+    toc: true 
+---
+
+```{r} 
+#| message: false 
+#| warning: false 
+library(tidyverse) 
+library(here)  
+```
+
+## Exercício 1: Leitura e arrumação de 2023 
+
+```{r}
+# 1. Leitura do arquivo de 2023 definindo na = "-" 
+dados_2023_brutos <- read_delim(here::here("listas/lista-03/dados/receitas_2023.csv"), 
+                                delim = ";",
+                                na = "-") 
+
+# 2. Transformando de formato largo para longo (tidy)
+dados_2023_tidy <- dados_2023_brutos |> 
+  pivot_longer(cols = jan:dez, names_to = "mes", values_to = "valor") |> 
+  mutate(ano = 2023) 
+
+# 3. Conferência dos dados 
+# Número de meses sem registro (esperado: 4) 
+meses_sem_registro_2023 <- sum(is.na(dados_2023_tidy$valor)) 
+
+# Soma total das receitas registradas (esperado: 1329130) 
+soma_valores_2023 <- sum(dados_2023_tidy$valor, na.rm = TRUE)
+
+cat("Meses sem registro em 2023:", meses_sem_registro_2023, "\n") 
+cat("Soma das receitas em 2023:", soma_valores_2023, "\n")
+```
+
+## Exercício 2: Leitura de 2024/2025 e empilhamento dos dados
+```{r} 
+# 1. Leitura e arrumação de 2024
+dados_2024_tidy <- read_delim(here::here("listas/lista-03/dados/receitas_2024.csv"), delim = ";", na = "-" ) |>
+  pivot_longer(cols = jan:dez,
+               names_to = "mes",
+               values_to = "valor") |>
+  mutate(ano = 2024) 
+
+# 2. Leitura e arrumação de 2025
+
+dados_2025_tidy <- read_delim(here::here("listas/lista-03/dados/receitas_2025.csv"), delim = ";", na = "-" ) |> pivot_longer(cols = jan:dez, names_to = "mes", values_to = "valor") |> mutate(ano = 2025) 
+
+# 3. Empilhando os 3 anos (2023, 2024 e 2025)
+dados_todos_anos <- bind_rows(dados_2023_tidy, dados_2024_tidy, dados_2025_tidy) 
+
+# 4. Tabela de conferência agregada por ano 
+conferencia_anos <- dados_todos_anos |> 
+  group_by(ano) |> 
+  summarise(
+    meses_sem_registro = sum(is.na(valor)),
+    soma_valores = sum(valor, na.rm = TRUE)
+    ) 
+conferencia_anos 
+```
+
+## Exercício 3: Leitura do cadastro e junção das informações 
+
+```{r}
+# 1. Leitura do arquivo de cadastro 
+
+cadastro <- read_delim(here::here("listas/lista-03/dados/cadastro.csv"), 
+                       delim = ";",
+                       locale = locale(encoding = "latin1"),
+                       show_col_types = FALSE) 
+
+# 2. Junção com a tabela completa de medições 
+
+dados_completos <- dados_todos_anos |> left_join(cadastro, by = "codigo") 
+
+# 3. Visualização rápida do resultado
+
+glimpse(dados_completos)
+
+```
+
+## Exercício 4: Resumos estatísticos das receitas
+
+```{r}
+# 1. Resumo por Ano 
+
+resumo_por_ano <- dados_completos |>
+  group_by(ano) |> 
+  summarise( 
+    total_receitas = sum(valor, na.rm = TRUE),
+    media_mensal = mean(valor, na.rm = TRUE),
+    mediana_mensal = median(valor, na.rm = TRUE),
+    desvio_padrao = sd(valor, na.rm = TRUE) 
+    ) 
+resumo_por_ano 
+
+# 2. Resumo por Local de Atendimento
+resumo_por_local <- dados_completos |> group_by(local) |> 
+  summarise(
+    total_receitas = sum(valor, na.rm = TRUE), 
+    media_mensal = mean(valor, na.rm = TRUE)
+    )
+resumo_por_local 
+
+# 3. Top 3 Farmácias com maior movimento total
+
+top_farmacias <- dados_completos |> 
+  group_by(nome, local) |>
+  summarise(total = sum(valor, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(total))
+top_farmacias 
+
+```
+
+## Exercício 5: Leitura automatizada de múltiplos arquivos
+
+```{r}
+# 1. Mapear todos os caminhos dos arquivos de receitas (.csv)
+
+arquivos_receitas <- list.files(
+  path = here::here("listas/lista-03/dados"),
+  pattern = "receitas_.*\\.csv$",
+  full.names = TRUE
+  )
+
+# 2. Função para ler e transformar cada arquivo individualmente
+
+ler_e_arrumar <- function(caminho_arquivo) {
+  # Extrai o ano do nome do arquivo
+  ano_extracao <- as.numeric(str_extract(caminho_arquivo, "\\d{4}"))
+  
+  read_delim(caminho_arquivo, delim = ";", na = "-", show_col_types = FALSE) |>
+    pivot_longer(cols = jan:dez,
+                 names_to = "mes",
+                 values_to = "valor"
+                 ) |>
+    mutate(ano = ano_extracao)
+  } 
+
+# 3. Leitura e empilhamento automático de todos os arquivos de uma vez 
+
+dados_automatizados <- map_dfr(arquivos_receitas, ler_e_arrumar) 
+
+# 4. Verificação: a tabela automatizada deve ter as mesmas 432 linhas
+
+dim(dados_automatizados) 
+
+```
